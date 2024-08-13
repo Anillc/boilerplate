@@ -14,13 +14,24 @@ jobs:
         target:
           - runs-on: windows-latest
             platform: windows
+            output-arch: amd64
+            node-arch: x64
           - runs-on: ubuntu-latest
             platform: linux
+            output-arch: amd64
+            node-arch: x64
           - runs-on: ubuntu-latest
             platform: linux
-            emulate: arm64
+            output-arch: arm64
+            node-arch: arm64
+          - runs-on: ubuntu-latest
+            platform: linux
+            output-arch: armv7l
+            node-arch: armv7l
           - runs-on: macos-latest
             platform: darwin
+            output-arch: amd64
+            node-arch: x64
 
     runs-on: ${{ matrix.target.runs-on }}
 
@@ -30,17 +41,9 @@ jobs:
         shell: bash
         run: |
           echo "NODE_VERSION=${{ matrix.target.node || '20' }}" >> $GITHUB_OUTPUT
-          echo "ARCH=${{ matrix.target.emulate || 'amd64' }}" >> $GITHUB_OUTPUT
 
-      - name: Install nix (for arm64)
-        if: ${{ matrix.target.emulate }}
-        uses: cachix/install-nix-action@v20
-
-      - name: Set up qemu and binfmt (for arm64)
-        if: ${{ matrix.target.emulate }}
+      - name: Set up qemu and binfmt
         uses: docker/setup-qemu-action@v3
-        with:
-          platforms: ${{ matrix.target.emulate }}
 
       - name: Check out
         uses: actions/checkout@v4
@@ -48,15 +51,10 @@ jobs:
           ref: develop
 
       - name: Set up Node
-        if: ${{ !matrix.target.emulate }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ steps.vars.outputs.NODE_VERSION }}
-
-      - name: Set up Node (for arm64)
-        if: ${{ matrix.target.emulate == 'arm64' }}
-        run: |
-          nix profile install github:NixOS/nixpkgs/04719f0326c5f8084f1fc7d1ca3fb15f8f09bb5e#nodejs_${{ steps.vars.outputs.NODE_VERSION }} --option system aarch64-linux
+          architecture: ${{ matrix.target.node-arch }}
 
       - name: Install zip (for windows)
         if: ${{ matrix.target.platform == 'windows' }}
@@ -76,7 +74,7 @@ jobs:
         shell: bash
         run: >
           bash .github/workflows/upload.sh
-          '${{ matrix.target.platform }}-${{ steps.vars.outputs.ARCH }}-node${{ steps.vars.outputs.NODE_VERSION }}'
+          '${{ matrix.target.platform }}-${{ matrix.target.output-arch }}-node${{ steps.vars.outputs.NODE_VERSION }}'
         env:
           GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
 

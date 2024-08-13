@@ -30,7 +30,7 @@ jobs:
           docker buildx build \
             --build-arg LINK=$LINK \
             --output "type=image,push=true" \
-            --platform linux/amd64,linux/arm64 \
+            --platform linux/amd64,linux/arm64,linux/arm/v7 \
             --tag ${DOCKER_REPO}:$TAG \
             --tag ${DOCKER_REPO}:latest \
             --file ./docker/Dockerfile \
@@ -38,7 +38,7 @@ jobs:
           docker buildx build \
             --build-arg LINK=$LINK \
             --output "type=image,push=true" \
-            --platform linux/amd64,linux/arm64 \
+            --platform linux/amd64,linux/arm64,linux/arm/v7 \
             --tag ${DOCKER_REPO}:$TAG-lite \
             --tag ${DOCKER_REPO}:latest-lite \
             --file ./docker/Dockerfile.lite \
